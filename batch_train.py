@@ -16,7 +16,7 @@ tf.flags.DEFINE_boolean("log_device_placement", False, "Log placement of ops on 
 
 FLAGS = tf.flags.FLAGS
 vocab = Vocab(params.max_vocab_size, emb_dim=50, dataset_path='data/',
-              glove_path='glove/glove.6B.50d.txt',
+              glove_path='/kaggle/input/glove-global-vectors-for-word-representation/glove.6B.50d.txt',
               vocab_path='data_files/vocab.txt', lookup_path='data_files/lookup.pkl')
 
 dg = DataGenerator('data/', params.max_inp_seq_len, params.max_out_seq_len, vocab, use_pgen=False,
