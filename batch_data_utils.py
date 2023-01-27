@@ -12,106 +12,104 @@ import tensorflow as tf
 import params
 
 # Setting-up seeds
-random.seed(2019)
-np.random.seed(2019)
-tf.set_random_seed(2019)
+random.seed(2021)
+np.random.seed(2021)
+tf.set_random_seed(2021)
 
 
-def read_text_file(text_file):
-    lines = []
-    with open(text_file, "r") as f:
-        for line in f:
-            lines.append(line.strip())
+def read_text_file(txt_file):
+    Lines = []
+    with open(txt_file, "r") as f:
+       for Line in f:
+            lines.append(Line.strip())
 
-    return lines
+    return Lines
 
 
-def hashhex(s):
+def hashhex(a):
     """
-		Returns a heximal formatted SHA1 hash of the input string.
+		Returns a heximal version of the SHA1 hash of the input string.
 	"""
     h = hashlib.sha1()
-    h.update(s.encode('utf-8'))
+    h.update(a.encode('utf-8'))
 
     return h.hexdigest()
 
 
-def fix_missing_period(line):
-    if "@highlight" in line:
-        return line
+def fix_missing_period(Line):
+    if "@highlight" in Line:
+        return Line
 
-    if line == "":
-        return line
+    if Line == "":
+        return Line
 
-    if line[-1] in params.END_TOKENS:
-        return line[: -1] + " " + line[-1]
+    if Line[-1] in params.END_TOKENS:
+        return Line[: -1] + " " + Line[-1]
 
-    return line + " ."
+    return Line + " ."
 
 
-def get_article_labels(sent_file):
-    with open(sent_file, 'r') as sentFile:
-        sents = sentFile.readlines()
-    # with open(sent_file[:-len('.story.txt')] + '.windowed_summarunner_scores.txt', 'r') as labelFile:
-    with open(sent_file[:-len('.story.txt')] + '.summarunner_scores.txt', 'r') as labelFile:
+def get_article_labels(File_Sent):
+    with open(File_Sent, 'r') as sentenceFile:
+        sents = sentenceFile.readlines()
+    with open(File_Sent[:-len('.story.txt')] + '.windowed_summarunner_scores.txt', 'r') as labelFile:
         labels = labelFile.readlines()
         labels = [int(label) for label in labels]
     return sents, labels
 
-
-def article2ids(article_words, vocab):
+def article2ids(words_of_article, Vocab):
     """
-		This function converts given article words to ID's
-	:param article_words: article tokens.
-	:param vocab: The vocabulary object used for lookup tables, vocabulary etc.
+	converting the words of an article into their coressponding IDs
+	:param words_of_article: list of all words in an article.
+	:param Vocab: a vocabulary object used for lookup tables, vocabulary etc.
 	:return: The corresponding ID's and a list of OOV tokens.
 	"""
-    ids = []
-    oovs = []
-    unk_id = vocab.word2id(params.UNKNOWN_TOKEN)
-    for word in article_words:
-        i = vocab.word2id(word)
-        if i == unk_id:  # Out of vocabulary words.
-            if word in oovs:
-                ids.append(vocab.size() + oovs.index(word))
+    IDS = []
+    OOVS = []
+    unk_id = Vocab.word2id(params.UNKNOWN_TOKEN)
+    for word in words_of_article:
+        i = Vocab.word2id(word)
+        if i == unk_id:  # when word is not in the vocabulary.
+            if word in OOVS:
+                IDS.append(vocab.size() + OOVS.index(word))
             else:
-                oovs.append(word)
-                ids.append(vocab.size() + oovs.index(word))
-        else:  # In vocabulary words.
-            ids.append(i)
+		OOVS.append(word)
+		IDS.append(Vocab.size() + OOVS.index(word))
+        else:  # word is in vocabulary.
+            IDS.append(i)
 
-    return ids, oovs
+    return IDS, OOVS
 
 
-def summary2ids(summary_words, vocab, article_oovs):
+def summary2ids(Summary_words, Vocab, article_OOVS):
     """
-	This function converts the given summary words to ID's
+	converting the words of summary into their coressponding IDs
 	:param summary_words: summary tokens.
 	:param vocab: The vocabulary object used for lookup tables, vocabulary etc.
 	:param article_oovs: OOV tokens in the input article.
 	:return: The corresponding ID's.
 	"""
     num_sent, sent_len = 0, 0
-    if type(summary_words[0]) is list:
+    if type(Summary_words[0]) is list:
         num_sent = len(summary_words)
         sent_len = len(summary_words[0])
 
         cum_words = []
-        for _, sent_words in enumerate(summary_words):
+        for _, sent_words in enumerate(Summary_words):
             cum_words += sent_words
 
-        summary_words = cum_words
-
+        Summary_words = cum_words
+	
+    unk_id = Vocab.word2id(params.UNKNOWN_TOKEN)
     ids = []
-    unk_id = vocab.word2id(params.UNKNOWN_TOKEN)
-    for word in summary_words:
-        i = vocab.word2id(word)
-        if i == unk_id:  # Out of vocabulary words.
+    for word in Summary_words:
+        i = Vocab.word2id(word)
+        if i == unk_id:  # when word is not in the vocabulary.
             if word in article_oovs:  # In article OOV words.
                 ids.append(vocab.size() + article_oovs.index(word))
             else:  # Both OOV and article OOV words.
                 ids.append(unk_id)
-        else:  # In vocabulary words.
+        else:  # word is in vocabulary.
             ids.append(i)
 
     if num_sent != 0:
@@ -125,8 +123,8 @@ def summary2ids(summary_words, vocab, article_oovs):
 
 
 class Vocab(object):
-    def __init__(self, max_vocab_size, emb_dim=300, dataset_path='data/', glove_path='glove.6B/glove.6B.50d.txt',
-                 vocab_path='data_files/vocab.txt', lookup_path='data_files/lookup.pkl'):
+    def __init__(self, max_vocab_size, emb_dim=300, dataset_path='data/', glove_path='/kaggle/input/glove-global-vectors-for-word-representation/glove.6B.50d.txt',
+                 vocab_path='/kaggle/input/vocabulary/vocab.txt', lookup_path='/kaggle/input/vocabulary/lookup.pkl'):
 
         self.max_size = max_vocab_size
         self._dim = emb_dim
@@ -134,9 +132,9 @@ class Vocab(object):
         self.PathToVocabFile = vocab_path
         self.PathToLookups = lookup_path
 
-        # All train Stories.
-        self._story_files = glob.glob(dataset_path + 'train/*.sents.txt')
+        # training data
         self.vocab = []  # Vocabulary
+	self._story_files = glob.glob("/kaggle/input/data-set/Extractive_Research_Slide_Generation_Using_Windowed_Labeling_Ranking-master/data/" + 'train/*.sents.txt')
 
         # Create the vocab file.
         self.create_total_vocab()
@@ -155,8 +153,7 @@ class Vocab(object):
 
     def word2id(self, word):
         """
-      	This function returns the vocabulary ID for word if it is present. Otherwise, returns the ID
-		for the unknown token.
+      	word->id
 		:param word: input word.
 		:return: returns the ID.
 		"""
@@ -164,19 +161,20 @@ class Vocab(object):
 
     def id2word(self, word_id):
         """
-			This function returns the corresponding word for a given vocabulary ID.
+			id->word
 		:param word_id: input ID.
 		:return:  returns the word.
 		"""
         if word_id in self._id_to_word:
             return self._id_to_word[word_id]
         else:
-            raise ValueError("{} is not a valid ID.\n".format(word_id))
+            raise ValueError("not valid ID.\n".format(word_id))
 
     def create_total_vocab(self):
+	""" creating the vocab list of all the training data"""
 
         if os.path.isfile(self.PathToVocabFile):
-            print("Vocab file exists! \n")
+            print("exists! \n")
 
             vocab_f = open(self.PathToVocabFile, 'r')
             for line in vocab_f:
