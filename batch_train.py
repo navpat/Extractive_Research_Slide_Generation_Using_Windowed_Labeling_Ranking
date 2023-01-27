@@ -7,9 +7,9 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 np.set_printoptions(threshold=sys.maxsize)
 # Parameters
 # ==================================================
-tf.flags.DEFINE_integer("num_epochs", 300, "Number of training epochs (default: 200)")
-tf.flags.DEFINE_integer("checkpoint_every", 100, "Save model after this many steps (default: 100)")
-tf.flags.DEFINE_integer("num_checkpoints", 5, "Number of checkpoints to store (default: 5)")
+tf.flags.DEFINE_integer("epoch_num", 350, "number of training epochs (default: 300)")
+tf.flags.DEFINE_integer("checkpoint_every", 200, "Save model after this many steps (default: 200)")
+tf.flags.DEFINE_integer("num_checkpoints", 7, "Number of checkpoints to store (default: 7)")
 # Misc Parameters
 tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
 tf.flags.DEFINE_boolean("log_device_placement", False, "Log placement of ops on devices")
